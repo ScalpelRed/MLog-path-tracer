@@ -1,0 +1,13 @@
+set mem bank1
+set out message1
+PRINTMEM:
+	set i 0
+	NEXT_NUM:
+		read val mem i
+		print val
+		print " "
+		op add i i 1
+		jump NEXT_NUM lessThan i 512
+	printflush out
+	jump PRINTMEM always 0 0
+	

@@ -1,0 +1,82 @@
+set memRom bank1
+
+read sphereArr memRom 0
+read sphereCount memRom sphereArr
+set sphereSize 11
+read yplaneArr memRom 2
+read yplaneCount memRom yplaneArr
+set yplaneSize 8
+
+set pxL 0
+set pyL 0
+set pxH 176
+set pyH 176
+set py pyL
+NEXT_LINE:
+	set px pxL
+	NEXT_PIXEL:
+		draw color px py 0 128 0 0 # for debug, remove
+		draw rect px py 1 1 0 0
+		drawflush display1
+	
+		op sub rayOrigX px 88
+		op sub rayOrigY py 88
+		set    rayOrigZ 0
+		set rayDirX 0
+		set rayDirY 0
+		set rayDirZ 1
+		
+		set sphereInd 0
+		op add sphere sphereArr 1
+		NEXT_SPHERE:
+			# https://habr.com/ru/articles/533932/
+			
+			read spherePosX memRom sphere
+			op add sphere sphere 1
+			read spherePosY memRom sphere
+			op add sphere sphere 1
+			read spherePosZ memRom sphere
+			op add sphere sphere 1
+			read sphereRad memRom sphere
+			op add sphere sphere 1
+			
+			op sub Lx rayOrigX spherePosX
+			op sub Ly rayOrigY spherePosY
+			op sub Lz rayOrigZ spherePosZ
+			
+			op mul a  rayDirX rayDirX
+			op mul t1 rayDirY rayDirY
+			op mul t2 rayDirZ rayDirZ
+			op add a a t1
+			op add a a t2
+			
+			op mul b  Lx rayDirX
+			op mul t1 Ly rayDirY
+			op mul t2 Lz rayDirZ
+			op add b b t1
+			op add b b t2
+			op mul b b 2
+			
+			op mul c  Lx Lx
+			op mul t1 Ly Ly
+			op mul t2 Lz Lz
+			op add c c t1
+			op add c c t2
+			op mul t1 sphereRad sphereRad
+			op sub c c t1
+			
+			op mul D  b  b
+			op mul t1 4  a
+			op mul t1 t1 c
+			op sub D D t1
+
+			# TODO
+			
+			op add sphere sphere sphereSize
+			op add sphereInd sphereInd 1
+			jump NEXT_SPHERE lessThan sphereInd sphereCount
+		op add px px 1
+		jump NEXT_PIXEL lessThan px pxH
+	op add py py 1
+	jump NEXT_LINE lessThan py pyH
+end

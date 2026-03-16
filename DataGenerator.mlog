@@ -1,0 +1,51 @@
+set swReset switch1
+set memRom bank1
+
+sensor resetPrev swReset @enabled
+RESET_WAIT:
+	sensor resetCur swReset @enabled
+	jump RESET_WAIT equal resetCur resetPrev
+set resetPrev resetCur
+
+# Spheres
+# Format: x y z r color_r color_g color_b emit_r emit_g emit_b roughness(11 nums)
+set sphereArr 2
+set sphereSize 11
+set sphereCount 1
+write sphereArr memRom 0 # spheres array pointer at 0
+write sphereCount memRom sphereArr # array starts with length
+
+op add sphere sphereArr 1 # 0 0 0
+write 0 memRom sphere 
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1 # 255 0 0
+write 255 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1 # 0
+write 0 memRom sphere
+op add sphere sphere 1 # 10 0 0 20
+write 10 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 20 memRom sphere
+
+# Y-planes
+# Format: y color_r color_g color_b  roughness  emit_r emit_g emit_b (8 nums)
+op mul yplanesPtr sphereCount sphereSize
+op add yplanesPtr yplanesPtr 1
+op add yplanesPtr yplanesPtr sphereArr
+set yplaneSize 8
+set yplaneCount 0
+write yplanesPtr memRom 1 # y-planes array pointer at 1
+write yplaneCount memRom yplanesPtr
+
+jump RESET_WAIT always 0 0
