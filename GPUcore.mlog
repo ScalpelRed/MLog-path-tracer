@@ -1,305 +1,82 @@
 set memRom bank1
-set msgDebug message1
 
-RESET:
-
-set bounceCount 3
-set rayOriginShift 0.1
-
-read bgData memRom 0
-set bgDataSize 7
-
-read matArr memRom 1
-read matCount memRom matArr
-set matSize 7
-
-read sphereArr memRom 2
+read sphereArr memRom 0
 read sphereCount memRom sphereArr
-set sphereSize 5
-
-read yplaneArr memRom 3
+set sphereSize 11
+read yplaneArr memRom 2
 read yplaneCount memRom yplaneArr
-set yplaneSize 4
+set yplaneSize 8
 
-set bgDataPtr bgData
-read bgEmitR memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgEmitG memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgEmitB memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseR memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseG memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseB memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseThreshold memRom bgDataPtr
-
-set frameAlpha 255
-NEXT_FRAME:
-set pxL 32
-set pyL 72
-set pxH 144
-set pyH 144
+set pxL 0
+set pyL 0
+set pxH 176
+set pyH 176
 set py pyL
 NEXT_LINE:
 	set px pxL
-        NEXT_PIXEL:
-            set rayOrigX 0.0
-            set rayOrigY 0.0
-            set rayOrigZ 0.0
-            op sub rayDirX px 88
-            op sub rayDirY py 88
-            set rayDirZ 88
-            op mul t1 rayDirX rayDirX
-            op mul t2 rayDirY rayDirY
-            op add t1 t1 t2
-            op mul t2 rayDirZ rayDirZ
-            op add t1 t1 t2
-            op sqrt t1 t1 0
-            op div rayDirX rayDirX t1
-            op div rayDirY rayDirY t1
-            op div rayDirZ rayDirZ t1
-            set resEmitR 0.0
-            set resEmitG 0.0
-            set resEmitB 0.0
-            set resReflR 1.0
-            set resReflG 1.0
-            set resReflB 1.0
+	NEXT_PIXEL:
+		draw color px py 0 128 0 0 # for debug, remove
+		draw rect px py 1 1 0 0
+		drawflush display1
+	
+		op sub rayOrigX px 88
+		op sub rayOrigY py 88
+		set    rayOrigZ 0
+		set rayDirX 0
+		set rayDirY 0
+		set rayDirZ 1
+		
+		set sphereInd 0
+		op add sphere sphereArr 1
+		NEXT_SPHERE:
+			# https://habr.com/ru/articles/533932/
+			
+			read spherePosX memRom sphere
+			op add sphere sphere 1
+			read spherePosY memRom sphere
+			op add sphere sphere 1
+			read spherePosZ memRom sphere
+			op add sphere sphere 1
+			read sphereRad memRom sphere
+			op add sphere sphere 1
+			
+			op sub Lx rayOrigX spherePosX
+			op sub Ly rayOrigY spherePosY
+			op sub Lz rayOrigZ spherePosZ
+			
+			op mul a  rayDirX rayDirX
+			op mul t1 rayDirY rayDirY
+			op mul t2 rayDirZ rayDirZ
+			op add a a t1
+			op add a a t2
+			
+			op mul b  Lx rayDirX
+			op mul t1 Ly rayDirY
+			op mul t2 Lz rayDirZ
+			op add b b t1
+			op add b b t2
+			op mul b b 2
+			
+			op mul c  Lx Lx
+			op mul t1 Ly Ly
+			op mul t2 Lz Lz
+			op add c c t1
+			op add c c t2
+			op mul t1 sphereRad sphereRad
+			op sub c c t1
+			
+			op mul D  b  b
+			op mul t1 4  a
+			op mul t1 t1 c
+			op sub D D t1
 
-            set bounceInd 0
-            NEXT_BOUNCE:
-                set bestDist 9999
-                set bestNormX 0
-                set bestNormY 0
-                set bestNormZ 0
-                set bestMat 0
-
-                jump SPHERES_DONE lessThanEq sphereCount 0
-                set sphereInd 0
-                op add sphere sphereArr 1
-                NEXT_SPHERE: # https://habr.com/ru/articles/533932/
-                    read spherePosX memRom sphere
-                    op add spherePtr sphere 1
-                    read spherePosY memRom spherePtr
-                    op add spherePtr spherePtr 1
-                    read spherePosZ memRom spherePtr
-                    op add spherePtr spherePtr 1
-                    read sphereRad memRom spherePtr
-
-                    # L = rayOrig - spherePos
-                    op sub Lx rayOrigX spherePosX
-                    op sub Ly rayOrigY spherePosY
-                    op sub Lz rayOrigZ spherePosZ
-                    op mul a  rayDirX rayDirX
-                    # a = dot(rayDir, rayDir)
-                    op mul t1 rayDirY rayDirY
-                    op mul t2 rayDirZ rayDirZ
-                    op add a a t1
-                    op add a a t2
-                    # b = 2.0 * dot(L, rayDir)
-                    op mul b  Lx rayDirX
-                    op mul t1 Ly rayDirY
-                    op mul t2 Lz rayDirZ
-                    op add b b t1
-                    op add b b t2
-                    op mul b b 2
-                    # c = dot(L, L) - sphereRad^2
-                    op mul c  Lx Lx
-                    op mul t1 Ly Ly
-                    op mul t2 Lz Lz
-                    op add c c t1
-                    op add c c t2
-                    op mul t1 sphereRad sphereRad
-                    op sub c c t1
-                    # D = b^2 - 4*a*c
-                    op mul D b b
-                    op mul t1 4.0 a
-                    op mul t1 t1 c
-                    op sub D D t1
-                    jump SPHERE_NOT_CLOSER lessThan D 0.0 # if D < 0 - no hit
-                    # dist = -b - sqrt(D)
-                    op sqrt t1 D 0
-                    op sub dist 0 b
-                    op sub dist dist t1
-                    jump SPHERE_HIT greaterThan dist 0.0 # if dist > 0 - it's distance
-                    # dist = -b + sqrt(D)
-                    op mul t1 t1 2.0
-                    op add dist dist t1
-                    jump SPHERE_NOT_CLOSER lessThan dist 0.0 # if this time dist < 0 - no hit
-
-                    SPHERE_HIT:
-                    # dist /= (2 * a)
-                    op mul dist dist 0.5
-                    op div dist dist a
-                    jump SPHERE_NOT_CLOSER greaterThan dist bestDist
-
-                    set bestDist dist
-                    # normal = normalize(rayDir * dist + L)
-                    op mul bestNormX rayDirX dist
-                    op mul bestNormY rayDirY dist
-                    op mul bestNormZ rayDirZ dist
-                    op add bestNormX bestNormX Lx
-                    op add bestNormY bestNormY Ly
-                    op add bestNormZ bestNormZ Lz
-                    op mul t1 bestNormX bestNormX
-                    op mul t2 bestNormY bestNormY
-                    op add t1 t1 t2
-                    op mul t2 bestNormZ bestNormZ
-                    op add t1 t1 t2
-                    op sqrt t1 t1 0
-                    op div bestNormX bestNormX t1
-                    op div bestNormY bestNormY t1
-                    op div bestNormZ bestNormZ t1
-                    # reading material
-                    op add spherePtr spherePtr 1
-                    read bestMat memRom spherePtr
-
-                    SPHERE_NOT_CLOSER:
-                    op add sphere sphere sphereSize
-                    op add sphereInd sphereInd 1
-                    jump NEXT_SPHERE lessThan sphereInd sphereCount
-                SPHERES_DONE:
-
-                jump YPLANES_DONE lessThanEq yplaneCount 0
-                jump YPLANES_DONE lessThanEq rayDirY 0.0001 # ray is parallel to Y-plane
-                set yplaneInd 0
-                op add yplane yplaneArr 1
-                NEXT_YPLANE:
-                    read yplaneY memRom yplane
-                    op sub dist yplaneY rayOrigY
-                    op div dist dist rayDirY
-                    jump YPLANE_NOT_CLOSER lessThan dist 0 # no hit - plane is behind the camera
-                    jump YPLANE_NOT_CLOSER greaterThan dist bestDist
-
-                    set bestDist dist
-                    # bestNorm = (0; -sign(rayDirY); 0)
-                    op abs t1 rayDirY 0
-                    op sub t1 0 t1
-                    op div bestNormY rayDirY t1
-                    set bestNormX 0
-                    set bestNormZ 0
-                    # reading material
-                    # it uses checker pattern based on point XZ position
-                    # we calculate intersection point and local material index
-                    # (local material index is 0/1 - mat0/mat1)
-                    op add yplanePtr yplane 1
-                    read yplaneMW memRom yplanePtr
-                    op mul t1 rayDirX dist
-                    op mul t2 rayDirZ dist
-                    print t1
-                    print "\n"
-                    print t2
-                    printflush msgDebug
-                    op add t1 rayOrigX t1 # (t1; t2) - XZ intersection point
-                    op add t2 rayOrigZ t2
-                    op div t1 t1 yplaneMW
-                    op div t2 t2 yplaneMW
-                    op floor t1 t1 0
-                    op floor t2 t2 0 # (t1; t2) - integer coords in checker pattern
-                    op add t1 t1 t2
-                    op mul t2 t1 0.5 # mat = t1 - 2 * floor(t1 / 2)
-                    op floor t2 t2 0
-                    op mul t2 t2 2.0
-                    op sub t1 t1 t2
-                    op add yplanePtr yplanePtr 1
-                    op add yplanePtr yplanePtr t1
-                    read bestMat memRom yplanePtr
-
-                    YPLANE_NOT_CLOSER:
-                    op add yplane yplane yplaneSize
-                    op add yplaneInd yplaneInd 1
-                    jump NEXT_YPLANE lessThan yplaneInd yplaneCount
-                YPLANES_DONE:
-
-                jump NO_HIT greaterThanEq bestDist 9999
-                op mul mat matSize bestMat
-                op add mat mat 1
-                op add mat mat matArr
-                read emitR memRom mat
-                op add matPtr mat 1
-                read emitG memRom matPtr
-                op add matPtr matPtr 1
-                read emitB memRom matPtr
-                op add matPtr matPtr 1
-                read reflR memRom matPtr
-                op add matPtr matPtr 1
-                read reflG memRom matPtr
-                op add matPtr matPtr 1
-                read reflB memRom matPtr
-                op add matPtr matPtr 1
-                read rough memRom matPtr
-                # resEmit += resRefl * emit
-                op mul t1 resReflR emitR
-                op add resEmitR resEmitR t1
-                op mul t1 resReflG emitG
-                op add resEmitG resEmitG t1
-                op mul t1 resReflB emitB
-                op add resEmitB resEmitB t1
-                # resRefl *= refl
-                op mul resReflR resReflR reflR
-                op mul resReflG resReflG reflG
-                op mul resReflB resReflB reflB
-                # rayOrigX += rayDirX * bestDist + bestNormX * rayOriginShift
-                op mul t1 rayDirX bestDist
-                op add rayOrigX rayOrigX t1
-                op mul t1 bestNormX rayOriginShift
-                op add rayOrigX rayOrigX t1
-                op mul t1 rayDirY bestDist
-                op add rayOrigY rayOrigY t1
-                op mul t1 bestNormY rayOriginShift
-                op add rayOrigY rayOrigY t1
-                op mul t1 rayDirZ bestDist
-                op add rayOrigZ rayOrigZ t1
-                op mul t1 bestNormZ rayOriginShift
-                op add rayOrigZ rayOrigZ t1
-                # rayDir -= 2 * dot(rayDir, bestNorm) * bestNorm
-                op mul t1 rayDirX bestNormX
-                op mul t2 rayDirY bestNormY
-                op add t1 t1 t2
-                op mul t2 rayDirZ bestNormZ
-                op add t1 t1 t2
-                op mul t1 t1 2.0
-                op mul bestNormX bestNormX t1 # bestNorm *= t1
-                op mul bestNormY bestNormY t1
-                op mul bestNormZ bestNormZ t1
-                op sub rayDirX rayDirX bestNormX
-                op sub rayDirY rayDirY bestNormY
-                op sub rayDirZ rayDirZ bestNormZ
-                jump HIT_RES_RESOLVED always 0 0
-
-                NO_HIT:
-                # resEmit += resRefl * bgEmit
-                op mul t1 resReflR bgEmitR
-                op add resEmitR resEmitR t1
-                op mul t1 resReflG bgEmitG
-                op add resEmitG resEmitG t1
-                op mul t1 resReflB bgEmitB
-                op add resEmitB resEmitB t1
-                # no reflection
-                set resReflR 0.0
-                set resReflG 0.0
-                set resReflB 0.0
-
-                HIT_RES_RESOLVED:
-                op add bounceInd bounceInd 1
-                jump NEXT_BOUNCE lessThan bounceInd bounceCount
-            op mul resEmitR resEmitR 255
-            op min resEmitR resEmitR 255
-            op max resEmitR resEmitR 0
-            op mul resEmitG resEmitG 255
-            op min resEmitG resEmitG 255
-            op max resEmitG resEmitG 0
-            op mul resEmitB resEmitB 255
-            op min resEmitB resEmitB 255
-            op max resEmitB resEmitB 0
-            draw color resEmitR resEmitG resEmitB frameAlpha 0 0
-            draw rect px py 1 1 0 0
-            drawflush display1
-            op add px px 1
-            jump NEXT_PIXEL lessThan px pxH
+			# TODO
+			
+			op add sphere sphere sphereSize
+			op add sphereInd sphereInd 1
+			jump NEXT_SPHERE lessThan sphereInd sphereCount
+		op add px px 1
+		jump NEXT_PIXEL lessThan px pxH
 	op add py py 1
 	jump NEXT_LINE lessThan py pyH
-frameAlpha = 127
-jump NEXT_FRAME always 0 0
+end

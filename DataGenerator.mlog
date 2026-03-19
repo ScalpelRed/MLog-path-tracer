@@ -7,131 +7,45 @@ RESET_WAIT:
 	jump RESET_WAIT equal resetCur resetPrev
 set resetPrev resetCur
 
-set pointerCount 4
-
-# Background data (not array!)
-set bgData pointerCount
-# Format skyR skyG skyB noiseR noiseG noiseB noiseThreshold (7 nums)
-set bgDataSize 7
-write bgData memRom 0
-
-set bgDataPtr bgData
-write 0 memRom bgDataPtr # bg color
-op add bgDataPtr bgDataPtr 1
-write 0 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 0.5 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 1 memRom bgDataPtr # noise color (can also be used for stars with high threshold)
-op add bgDataPtr bgDataPtr 1
-write 1 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 1 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 0.95 memRom bgDataPtr # noise threshold
-
-
-# Materials
-op add matArr bgData bgDataSize
-# Format emit_r emit_g emit_b color_r color_g color_b roughness (7 nums)
-set matSize 7
-set matCount 3
-write matArr memRom 1 # materials array pointer
-write matCount memRom matArr # array starts with length
-set matPtr matArr
-
-# (0) red emission
-op add matPtr matPtr 1 # emit
-write 1 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1 # refl
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1 # rough
-write 0 memRom matPtr
-
-# (1) green emission
-op add matPtr matPtr 1 # emit
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 1 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1 # refl
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1 # rough
-write 0 memRom matPtr
-
-# (2) metallic
-op add matPtr matPtr 1 # emit
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1
-write 0 memRom matPtr
-op add matPtr matPtr 1 # refl
-write 0.5 memRom matPtr
-op add matPtr matPtr 1
-write 0.5 memRom matPtr
-op add matPtr matPtr 1
-write 0.5 memRom matPtr
-op add matPtr matPtr 1 # rough
-write 0 memRom matPtr
-
-
 # Spheres
-op mul sphereArr matCount matSize
-op add sphereArr sphereArr 1
-op add sphereArr sphereArr matArr
-# Format: x y z r mat (5 nums)
-set sphereSize 5
+# Format: x y z r color_r color_g color_b emit_r emit_g emit_b roughness(11 nums)
+set sphereArr 2
+set sphereSize 11
 set sphereCount 1
-write sphereArr memRom 2 # spheres array pointer
-write sphereCount memRom sphereArr
-set spherePtr sphereArr
+write sphereArr memRom 0 # spheres array pointer at 0
+write sphereCount memRom sphereArr # array starts with length
 
-op add spherePtr spherePtr 1 # pos
-write 0 memRom spherePtr
-op add spherePtr spherePtr 1
-write 5 memRom spherePtr
-op add spherePtr spherePtr 1
-write 10 memRom spherePtr
-op add spherePtr spherePtr 1 # rad
-write 4.5 memRom spherePtr
-op add spherePtr spherePtr 1 # mat
-write 2 memRom spherePtr
-
+op add sphere sphereArr 1 # 0 0 0
+write 0 memRom sphere 
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1 # 255 0 0
+write 255 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1 # 0
+write 0 memRom sphere
+op add sphere sphere 1 # 10 0 0 20
+write 10 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 0 memRom sphere
+op add sphere sphere 1
+write 20 memRom sphere
 
 # Y-planes
-# Format: y mw mat0 mat1 (4 nums)
-# They have a checker pattern of mat1 and mat2, mw is cell size
-op mul yplaneArr sphereCount sphereSize
-op add yplaneArr yplaneArr 1
-op add yplaneArr yplaneArr sphereArr
-set yplaneSize 4
-set yplaneCount 1
-write yplaneArr memRom 3 # y-planes array pointer
-write yplaneCount memRom yplaneArr
-set yplanePtr yplaneArr
-
-op add yplanePtr yplanePtr 1 # y
-write -10 memRom yplanePtr
-op add yplanePtr yplanePtr 1 # mw
-write 20 memRom yplanePtr
-op add yplanePtr yplanePtr 1 # mats
-write 1 memRom yplanePtr
-op add yplanePtr yplanePtr 1
-write 2 memRom yplanePtr
-
+# Format: y color_r color_g color_b  roughness  emit_r emit_g emit_b (8 nums)
+op mul yplanesPtr sphereCount sphereSize
+op add yplanesPtr yplanesPtr 1
+op add yplanesPtr yplanesPtr sphereArr
+set yplaneSize 8
+set yplaneCount 0
+write yplanesPtr memRom 1 # y-planes array pointer at 1
+write yplaneCount memRom yplanesPtr
 
 jump RESET_WAIT always 0 0
