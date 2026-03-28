@@ -3,9 +3,6 @@ set msgDebug message1
 
 RESET:
 
-set bounceCount 3
-set rayOriginShift 0.1
-
 read matArr memRom 0
 read matCount memRom matArr
 set matSize 7
@@ -21,15 +18,13 @@ set yplaneSize 4
 read bgEmitR memRom 3
 read bgEmitG memRom 4
 read bgEmitB memRom 5
-read bgNoiseR memRom 6
-read bgNoiseG memRom 7
-read bgNoiseB memRom 8
-read bgNoiseThreshold memRom 9
 read bgStarsR memRom 6
 read bgStarsG memRom 7
 read bgStarsB memRom 8
 read bgStarsThreshold memRom 9
 read bgStarsSize memRom 10
+read bounceCount memRom 11
+read rayOriginShift memRom 12
 
 set frameAlpha 255
 NEXT_FRAME:

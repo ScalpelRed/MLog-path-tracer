@@ -18,10 +18,10 @@ write 1.0 memRom 5
 write 1.0 memRom 6 # stars color
 write 1.0 memRom 7
 write 1.0 memRom 8
-write 0.95 memRom 9 # bg noise threshold
-set gVarSize 10
 write 0.05 memRom 9 # stars threshold
 write 2 memRom 10 # stars size
+write 3 memRom 11 # bounce count
+write 0.1 memRom 12 # ray origin along-normal shift
 set gVarSize 11
 
 
