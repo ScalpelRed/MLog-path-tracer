@@ -25,6 +25,11 @@ read bgNoiseR memRom 6
 read bgNoiseG memRom 7
 read bgNoiseB memRom 8
 read bgNoiseThreshold memRom 9
+read bgStarsR memRom 6
+read bgStarsG memRom 7
+read bgStarsB memRom 8
+read bgStarsThreshold memRom 9
+read bgStarsSize memRom 10
 
 set frameAlpha 255
 NEXT_FRAME:
@@ -261,14 +266,42 @@ NEXT_LINE:
                 jump HIT_RES_RESOLVED always 0 0
 
                 NO_HIT:
-                # resEmit += resRefl * bgEmit
-                op mul t1 resReflR bgEmitR
-                op add resEmitR resEmitR t1
-                op mul t1 resReflG bgEmitG
-                op add resEmitG resEmitG t1
-                op mul t1 resReflB bgEmitB
-                op add resEmitB resEmitB t1
-                # no reflection
+                # getting noise for stars
+                # TODO move it to world space from screen space
+                # (t1, t2) = bgStarsSize * floor(pixelCoord / bgStarsSize)
+                op div t1 px bgStarsSize
+                op div t2 py bgStarsSize
+                op floor t1 t1 0
+                op floor t2 t2 0
+                op mul t1 t1 bgStarsSize
+                op mul t2 t2 bgStarsSize
+                # noise = fract(sin(px * 12.9898 + py * 78.233) * 43758.5453123)
+                op mul t1 t1 12.9898
+                op mul t2 t2 78.2330
+                op add t1 t1 t2
+                op sin t1 t1 0
+                op mul t1 t1 43758.5453123
+                op floor t2 t1 0
+                op sub t1 t1 t2
+                jump NO_STAR greaterThan t1 bgStarsThreshold
+                    # resEmit += resRefl * bgStars
+                    op mul t1 resReflR bgStarsR
+                    op add resEmitR resEmitR t1
+                    op mul t1 resReflG bgStarsG
+                    op add resEmitG resEmitG t1
+                    op mul t1 resReflB bgStarsB
+                    op add resEmitB resEmitB t1
+                    jump STARS_RESOLVED always 0 0
+                NO_STAR:
+                    # resEmit += resRefl * bgEmit
+                    op mul t1 resReflR bgEmitR
+                    op add resEmitR resEmitR t1
+                    op mul t1 resReflG bgEmitG
+                    op add resEmitG resEmitG t1
+                    op mul t1 resReflB bgEmitB
+                    op add resEmitB resEmitB t1
+                STARS_RESOLVED:
+                # no further color changes
                 set resReflR 0.0
                 set resReflG 0.0
                 set resReflB 0.0
