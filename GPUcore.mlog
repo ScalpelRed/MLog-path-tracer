@@ -6,35 +6,25 @@ RESET:
 set bounceCount 3
 set rayOriginShift 0.1
 
-read bgData memRom 0
-set bgDataSize 7
-
-read matArr memRom 1
+read matArr memRom 0
 read matCount memRom matArr
 set matSize 7
 
-read sphereArr memRom 2
+read sphereArr memRom 1
 read sphereCount memRom sphereArr
 set sphereSize 5
 
-read yplaneArr memRom 3
+read yplaneArr memRom 2
 read yplaneCount memRom yplaneArr
 set yplaneSize 4
 
-set bgDataPtr bgData
-read bgEmitR memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgEmitG memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgEmitB memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseR memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseG memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseB memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-read bgNoiseThreshold memRom bgDataPtr
+read bgEmitR memRom 3
+read bgEmitG memRom 4
+read bgEmitB memRom 5
+read bgNoiseR memRom 6
+read bgNoiseG memRom 7
+read bgNoiseB memRom 8
+read bgNoiseThreshold memRom 9
 
 set frameAlpha 255
 NEXT_FRAME:

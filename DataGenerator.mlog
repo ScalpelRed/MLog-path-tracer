@@ -7,36 +7,27 @@ RESET_WAIT:
 	jump RESET_WAIT equal resetCur resetPrev
 set resetPrev resetCur
 
-set pointerCount 4
 
-# Background data (not array!)
-set bgData pointerCount
-# Format skyR skyG skyB noiseR noiseG noiseB noiseThreshold (7 nums)
-set bgDataSize 7
-write bgData memRom 0
-
-set bgDataPtr bgData
-write 0 memRom bgDataPtr # bg color
-op add bgDataPtr bgDataPtr 1
-write 0 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 0.5 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 1 memRom bgDataPtr # noise color (can also be used for stars with high threshold)
-op add bgDataPtr bgDataPtr 1
-write 1 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 1 memRom bgDataPtr
-op add bgDataPtr bgDataPtr 1
-write 0.95 memRom bgDataPtr # noise threshold
+# General variables
+# matArr    0
+# sphereArr 1
+# yplaneArr 2
+write 0.0 memRom 3 # bg color
+write 0.5 memRom 4
+write 1.0 memRom 5
+write 1.0 memRom 6 # bg noise color
+write 1.0 memRom 7
+write 1.0 memRom 8
+write 0.95 memRom 9 # bg noise threshold
+set gVarSize 10
 
 
 # Materials
-op add matArr bgData bgDataSize
+op add matArr 0 gVarSize
 # Format emit_r emit_g emit_b color_r color_g color_b roughness (7 nums)
 set matSize 7
 set matCount 3
-write matArr memRom 1 # materials array pointer
+write matArr memRom 0 # materials array pointer
 write matCount memRom matArr # array starts with length
 set matPtr matArr
 
@@ -96,7 +87,7 @@ op add sphereArr sphereArr matArr
 # Format: x y z r mat (5 nums)
 set sphereSize 5
 set sphereCount 1
-write sphereArr memRom 2 # spheres array pointer
+write sphereArr memRom 1 # spheres array pointer
 write sphereCount memRom sphereArr
 set spherePtr sphereArr
 
@@ -120,7 +111,7 @@ op add yplaneArr yplaneArr 1
 op add yplaneArr yplaneArr sphereArr
 set yplaneSize 4
 set yplaneCount 1
-write yplaneArr memRom 3 # y-planes array pointer
+write yplaneArr memRom 2 # y-planes array pointer
 write yplaneCount memRom yplaneArr
 set yplanePtr yplaneArr
 
