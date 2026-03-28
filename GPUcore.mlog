@@ -26,7 +26,7 @@ read bgStarsSize memRom 10
 read bounceCount memRom 11
 read rayOriginShift memRom 12
 
-set frameAlpha 255
+set frameAlpha 255 # first frame will be opaque
 NEXT_FRAME:
 set pxL 32
 set pyL 72
@@ -304,6 +304,7 @@ NEXT_LINE:
                 HIT_RES_RESOLVED:
                 op add bounceInd bounceInd 1
                 jump NEXT_BOUNCE lessThan bounceInd bounceCount
+            # pixel color = clamp(0, resEmit * 255, 255)
             op mul resEmitR resEmitR 255
             op min resEmitR resEmitR 255
             op max resEmitR resEmitR 0
@@ -320,5 +321,5 @@ NEXT_LINE:
             jump NEXT_PIXEL lessThan px pxH
 	op add py py 1
 	jump NEXT_LINE lessThan py pyH
-frameAlpha = 127
+set frameAlpha 127 # other frames are mixed with previous
 jump NEXT_FRAME always 0 0
