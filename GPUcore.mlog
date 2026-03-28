@@ -153,7 +153,8 @@ NEXT_LINE:
                 SPHERES_DONE:
 
                 jump YPLANES_DONE lessThanEq yplaneCount 0
-                jump YPLANES_DONE lessThanEq rayDirY 0.0001 # ray is parallel to Y-plane
+                op abs t1 rayDirY rayDirY
+                jump YPLANES_DONE lessThanEq t1 0.0001 # ray is parallel to Y-plane
                 set yplaneInd 0
                 op add yplane yplaneArr 1
                 NEXT_YPLANE:
