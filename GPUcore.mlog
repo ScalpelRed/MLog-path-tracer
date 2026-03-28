@@ -1,7 +1,13 @@
+RESET:
 set memRom bank1
 set msgDebug message1
 
-RESET:
+set frameAlpha 255 # first frame will be opaque
+NEXT_FRAME:
+set pxL 72
+set pyL 72
+set pxH 104
+set pyH 104
 
 read matArr memRom 0
 read matCount memRom matArr
@@ -26,12 +32,6 @@ read bgStarsSize memRom 10
 read bounceCount memRom 11
 read rayOriginShift memRom 12
 
-set frameAlpha 255 # first frame will be opaque
-NEXT_FRAME:
-set pxL 32
-set pyL 72
-set pxH 144
-set pyH 144
 set py pyL
 NEXT_LINE:
 	set px pxL
