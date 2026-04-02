@@ -233,22 +233,13 @@ NEXT_LINE:
                 op mul resReflG resReflG reflG
                 op mul resReflB resReflB reflB
                 # applying roughness
-                # getting a random vector
+                # getting a random vector, not normalizing it for now
                 op rand randX 2.0 0
                 op rand randY 2.0 0
                 op rand randZ 2.0 0
                 op sub randX randX 1.0
                 op sub randY randY 1.0
                 op sub randZ randZ 1.0
-                op mul t1 randX randX # normalizing
-                op mul t2 randY randY
-                op add t1 t1 t2
-                op mul t2 randZ randZ
-                op add t1 t1 t2
-                op sqrt t1 t1 0
-                op div randX randX t1
-                op div randY randY t1
-                op div randZ randZ t1
                 # if rand isn't in the same hemisphere as normal, we negate it
                 op mul t1 randX bestNormX # dot(rand, bestNorm)
                 op mul t2 randY bestNormY
@@ -271,6 +262,18 @@ NEXT_LINE:
                 op add bestNormX bestNormX randX
                 op add bestNormY bestNormY randY
                 op add bestNormZ bestNormZ randZ
+                # normalizing bestNorm
+                # That's why we didn't normalized rand - interpolation of two normalized vectors
+                # don't always give normalized result, so we'd just waste cycles on rand
+                op mul t1 bestNormX bestNormX
+                op mul t2 bestNormY bestNormY
+                op add t1 t1 t2
+                op mul t2 bestNormZ bestNormZ
+                op add t1 t1 t2
+                op sqrt t1 t1 0
+                op div bestNormX bestNormX t1
+                op div bestNormY bestNormY t1
+                op div bestNormZ bestNormZ t1
                 # rayOrigX += rayDirX * bestDist + bestNormX * rayOriginShift
                 op mul t1 rayDirX bestDist
                 op add rayOrigX rayOrigX t1
