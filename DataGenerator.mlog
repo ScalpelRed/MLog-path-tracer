@@ -22,7 +22,7 @@ write 0.05 memRom 9 # stars threshold
 write 2 memRom 10 # stars size
 write 3 memRom 11 # bounce count
 write 0.1 memRom 12 # ray origin along-normal shift
-set gVarSize 11
+set gVarSize 13
 
 
 # Materials
