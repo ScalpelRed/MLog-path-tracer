@@ -320,22 +320,22 @@ NEXT_LINE:
                 op mul t1 t1 43758.5453123
                 op floor t2 t1 0
                 op sub t1 t1 t2
-                jump NO_STAR greaterThan t1 bgStarsThreshold
-                    # resEmit += resRefl * bgStars
-                    op mul t1 resReflR bgStarsR
-                    op add resEmitR resEmitR t1
-                    op mul t1 resReflG bgStarsG
-                    op add resEmitG resEmitG t1
-                    op mul t1 resReflB bgStarsB
-                    op add resEmitB resEmitB t1
-                    jump STARS_RESOLVED always 0 0
-                NO_STAR:
+                jump IS_STAR lessThanEq t1 bgStarsThreshold
                     # resEmit += resRefl * bgEmit
                     op mul t1 resReflR bgEmitR
                     op add resEmitR resEmitR t1
                     op mul t1 resReflG bgEmitG
                     op add resEmitG resEmitG t1
                     op mul t1 resReflB bgEmitB
+                    op add resEmitB resEmitB t1
+                    jump STARS_RESOLVED always 0 0
+                IS_STAR:
+                    # resEmit += resRefl * bgStars
+                    op mul t1 resReflR bgStarsR
+                    op add resEmitR resEmitR t1
+                    op mul t1 resReflG bgStarsG
+                    op add resEmitG resEmitG t1
+                    op mul t1 resReflB bgStarsB
                     op add resEmitB resEmitB t1
                 STARS_RESOLVED:
                 # no further color changes
