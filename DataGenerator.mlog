@@ -14,14 +14,14 @@ set resetPrev resetCur
 # yplaneArr 2
 write 0.0 memRom 3 # bg color
 write 0.5 memRom 4
-write 1.0 memRom 5
+write 0.8 memRom 5
 write 1.0 memRom 6 # stars color
 write 1.0 memRom 7
 write 1.0 memRom 8
-write 0.05 memRom 9 # stars threshold
-write 2 memRom 10 # stars size
+write 0.05 memRom 9 # stars threshold (if noise value is below - it's a star)
+write 2 memRom 10 # stars size (degrees on sky sphere)
 write 3 memRom 11 # bounce count
-write 0.1 memRom 12 # ray origin along-normal shift
+write 0.1 memRom 12 # along-normal shift (added to new ray origin to prevent collision in actual origin)
 set gVarSize 13
 
 
