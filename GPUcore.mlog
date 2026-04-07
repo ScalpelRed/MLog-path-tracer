@@ -304,17 +304,29 @@ NEXT_LINE:
 
                 NO_HIT:
                 # getting noise for stars
-                # TODO move it to world space from screen space
-                # (t1, t2) = bgStarsSize * floor(pixelCoord / bgStarsSize)
-                op div t1 px bgStarsSize
-                op div t2 py bgStarsSize
-                op floor t1 t1 0
-                op floor t2 t2 0
-                op mul t1 t1 bgStarsSize
-                op mul t2 t2 bgStarsSize
-                # noise = fract(sin(px * 12.9898 + py * 78.233) * 43758.5453123)
-                op mul t1 t1 12.9898
-                op mul t2 t2 78.2330
+                # https://www.desmos.com/3d/t0vokuizxd
+                # skycoord = (ap, at);  (ap - phi, at - theta)
+                # at = arctan(z, sqrt(x^2 + y^2)) = arctan(z, sqrt(1 - z^2)), assuming (x, y, z) = rayDir is normalized
+                op mul t1 rayDirZ rayDirZ
+                op sub t1 1.0 t1
+                op sqrt t1 t1 0
+                op angle at t1 rayDirZ
+                # at = bgStarsSize * floor(at / bgStarsSize)
+                op div at at bgStarsSize
+                op floor at at 0
+                op mul at at bgStarsSize
+                # ap = arctan(y, x) * abs(cos(at))
+                op angle t1 rayDirX rayDirY
+                op cos t2 at 0
+                op abs t2 t2 0
+                op mul ap t1 t2
+                # ap = bgStarsSize * floor(ap / bgStarsSize)
+                op div ap ap bgStarsSize
+                op floor ap ap 0
+                op mul ap ap bgStarsSize
+                # noise = fract(sin(ap * 12.9898 + at * 78.233) * 43758.5453123)
+                op mul t1 ap 12.9898
+                op mul t2 at 78.2330
                 op add t1 t1 t2
                 op sin t1 t1 0
                 op mul t1 t1 43758.5453123
