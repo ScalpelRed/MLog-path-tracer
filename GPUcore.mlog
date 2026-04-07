@@ -1,6 +1,8 @@
 RESET:
 set memRom bank1
 set msgDebug message1
+set swReset switch1
+sensor resetPrev swReset @enabled
 
 set frameAlpha 255 # first frame will be opaque
 NEXT_FRAME:
@@ -36,6 +38,9 @@ set py pyL
 NEXT_LINE:
 	set px pxL
         NEXT_PIXEL:
+            sensor resetCur swReset @enabled
+	        jump RESET notEqual resetCur resetPrev
+
             set rayOrigX 0.0
             set rayOrigY 0.0
             set rayOrigZ 0.0
