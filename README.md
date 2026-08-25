@@ -3,11 +3,11 @@ Machine schematic for the game will be added later
 
 # Basic usage
 When the machine is built and powered, it will wait for reset button being pressed. Once it's pressed, the machine will reset GPUs and will start rendering the scene repeatedly. First render is done with 100% opacity, all following renders are done with 50% opacity, which makes the scene smoother with each render).  
-Pressing the reset button again will result in the rendered scene getting erased and rendered from 100% opacity again.
+Pressing the reset button again will result in the rendered scene getting erased and rendered from 100% opacity again.  
+Note: sometimes, pressing reset results in only half of the scene being rendered or half of the scene being rendered with 50% opacity. This is a bug, for now you can try restarting CPU, waiting for the frame to be finished, and then pressing reset.
 
 # How to edit the scene:
 CPU (small processor in the middle of the machine) is responsible for scene data. Open ControlCode.mlog and copy the code into a text editor. When you're ready to load your scene into the machine, open CPU's code editor and paste it there. The CPU will wait for reset button to be pressed again.  
-Note: sometimes, pressing reset results in only half of the scene being rendered or half of the scene being rendered with 50% opacity. Until this bug gets fixed, you can try pressing the reset button again when another frame is rendered partially.  
 Only two shapes are supported:
 - Sphere - a spherical object with XYZ position, radius and single material,
 - Y-plane - a plane parallel to the ground. Y-planes have checkerboard pattern - all cells have same size, even cells use material 0, odd cells use material 1 (two materials are specified for an Y-plane)
