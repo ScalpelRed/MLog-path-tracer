@@ -23,7 +23,10 @@ Using an index of an object that doesn't exist may result in garbage data being 
 
 ## Materials
 In #Materials section, you can edit materials. Make sure the variable matCount is equal to material count.  
-Materials have emission (RGB, the color that's added to ray when it bounces off the object), reflection (RGB, the color that the object will reflect) and roughness (Amount, the amount of randomness added to ray's direction on bounce).  
+Material parameters:
+- Emission (RGB, the color that's added to ray when it bounces off the object)
+- Reflection (RGB, the color that the object will reflect)
+- Roughness (Amount, the amount of randomness added to ray's direction on bounce).  
 Note: one material can be used by multiple objects.  
 Material initializer example: (source code has some more examples).
 ```mlog
@@ -46,7 +49,10 @@ write 0.01 memMain matPtr
 
 ## Spheres
 In #Spheres section, you can edit spheres. Make sure the variable sphereCount is equal to sphere count.  
-Spheres have position (XYZ), radius (Float) and material (UInt, the index of material to use)  
+Sphere parameters:
+- Position (XYZ)
+- Radius (Float)
+- Material (UInt, the index of material to use)  
 Sphere initializer example:
 ```mlog
 # Sphere at (12; 34; 56), radius is 20, material is 2
@@ -64,18 +70,22 @@ write 2 memMain spherePtr
 
 ## Y-planes
 In #Y-planes section, you can edit y-planes. Make sure the variable yplaneCount is equal to y-plane count.  
-Y-planes have y-position (Float), cell width (Float) and materials (two UInts, indexes of materials to use)  
+Y-plane parameters:
+- Y-position (Float)
+- Cell width (Float)
+- Material 0 (UInt)
+- Material 1 (UInt)  
 Y-plane initializer example:
 ```mlog
-# Y-position is -10, cell width is 20, materials are 0th and 1st
+# Y-position is -10, cell width is 20, material 0 is 5, material 1 is 2
 op add yplanePtr yplanePtr 1 # y
 write -10 memMain yplanePtr
 op add yplanePtr yplanePtr 1 # cell width
 write 20 memMain yplanePtr
 op add yplanePtr yplanePtr 1 # material 0
-write 1 memMain yplanePtr
+write 5 memMain yplanePtr
 op add yplanePtr yplanePtr 1 # material 1
-write 0 memMain yplanePtr
+write 2 memMain yplanePtr
 ```
 
 ## General variables
@@ -83,7 +93,7 @@ In #General variables section, you can change other rendering parameters:
 - Background color (RGB),
 - Stars color (RGB; stars are explained below),
 - Stars threshold (Amount),
-- Stars size (Float from 0 to 360),
+- Stars size (Float from 0 to ~6.28),
 - Bounce count (UInt) - how many bounces a ray can do. High values are not recommended,
 - Along-normal shift (Float) - length of the shift that's added to new ray's origin to prevent it from colliding the same object again, shift's direction is same as object's normal in collision point.
 
@@ -91,7 +101,7 @@ In #General variables section, you can change other rendering parameters:
 A coordinate-dependent pseudo-random noise is being added to the color of the sky. This can be used to add stars or noise to it.
 - Stars color is the color of the noise. Values contrast to sky color can be used for stars, while similar colors can be used for noise,
 - Stars threshold is the amount of sky having the color of stars. Low numbers can be used for stars, while values around 0.5 can be used to add noise,
-- Stars size is the size of one noise cell, it's considered to be in radians: 0 makes stars invisible, while ~3.14 makes cell size equal to the entire sky.
+- Stars size is the size of one noise cell, it's considered to be in radians: 0 makes stars invisible, ~6.28 makes cell size equal to the entire sky.
 
 # How to edit GPU code
 As long as you're not trying to change rendering algorithm, changing GPU code is unnecessary. However, if you still want to do it, changed code should be put into each GPU and procIndex should be changed to this GPU's index. You can do it manually or use some special tool (original machine was done with modified version of the game)
