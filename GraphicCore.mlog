@@ -1,106 +1,87 @@
-set syncCommand 2
-RESET:
 set procIndex 0
-
-set memMain bank1
-set memSync bank2
-set dispMain display1
-
-# calculating syncIndex
-# machine-dependent (514 GPUs, 2 sync memory blocks, each connected to 257 GPUs)
 set procCount 514
-op div t1 procCount 2
-op div t2 procIndex t1
-op floor t2 t2 0
-op mul t2 t2 t1
-op sub syncIndex procIndex t2
-write 0 memSync syncIndex
 
-set frameAlpha 255 # first frame will be opaque
-# calculating render area
-op mul t1 176 176
-op div pcH t1 procCount
-op max pcH pcH 1 # pixels per GPU
-# if render area is outside the screen, we need to decrease pcH
-# if area is fully outside, pcH will be negative, and no pixels will be rendered
-op mul t2 pcH procIndex
-op add t2 t2 pcH
-op sub t2 t2 t1
-op max t2 t2 0
-op sub pcH pcH t2
-# start pixel coords
-op mul t1 pcH procIndex
-op mod pxL t1 176
-op div pyL t1 176
-op floor pyL pyL 0
+AWAIT_MEMORY:
+    set memMain bank1
+    jump AWAIT_MEMORY strictEqual memMain null
+read syncCommand memMain 0
+jump SYNC_AWAIT_COMMAND always 0 0 # it is assumed CPU won't send a command until all GPUs are present
 
-# getting scene parameters
-read matArr memMain 1
-read matCount memMain matArr
-set matSize 7
-read sphereArr memMain 2
-read sphereCount memMain sphereArr
-set sphereSize 5
-read yplaneArr memMain 3
-read yplaneCount memMain yplaneArr
-set yplaneSize 4
+# before sending a command, CPU should set syncReply to 0
+# if syncReply is equal to this GPU's index, we increment syncReply
+# when last GPU increases syncReply, it becomes equal to procCount and all GPUs are ready
+SYNC_COMMAND_DONE:
+    read t1 memMain 1
+    jump SYNC_COMMAND_DONE notEqual t1 procIndex
+#jump _NORESETGRAPHICS always 0 0
+    op abs t2 syncCommand 0
+    jump _NORESETGRAPHICS notEqual t2 1
+    draw color 255 000 255 255 0 0
+    draw rect pxL pyL 1 1 0 0
+    drawflush dispMain
+_NORESETGRAPHICS:
+op add t1 t1 1
+write t1 memMain 1
 
-read bgEmitR memMain 4
-read bgEmitG memMain 5
-read bgEmitB memMain 6
-read bgStarsR memMain 7
-read bgStarsG memMain 8
-read bgStarsB memMain 9
-read bgStarsThreshold memMain 10
-read bgStarsSize memMain 11
-read bounceCount memMain 12
-read rayOriginShift memMain 13
-
-# HOW SYNC WORKS:
-#   mainMem[0] - sync command. Commands with same absolute value are same. Command 0 is reserved.
-# After executing a command, GPU waits for it to change (or to change it's sign - same command will be executed)
-# Sometimes, commands should check for new command themselves - for example, rendering (1) checks for reset every pixel,
-# because rendering takes a long time, and should be stoppable.
-#   memSync[syncIndex] - sync state, last command all previous GPUs executed. It changes to sync command if GPU waits
-# for new command and memSync[syncIndex-1] already changed it's sync state to sync command (or immediately if sync index is 0)
-# Control Core can either wait for last GPU in the chain to be ready or to give them a new command whenever it wants.
-# (sync index - 1) is also called dep index, memSync[syncIndex] - dep state (dep - dependency). After sync state is changed,
-# it can't change back (and doesn't need to - it means that GPUs finished their work, it can't change before new command)
-
-# jump here after finishing executing a command
-SYNC_AWAIT:
-jump SYNC_SET_DEP lessThanEq syncIndex 0 # no dependency
-op sub t2 syncIndex 1
-SYNC_WAIT_COMMAND_DEP: # cycle works with dep state and command
-    read t1 memSync t2
-    jump SYNC_SET_DEP equal t1 syncCommand # dep state and command match, drop this cycle, set sync state and wait for command
+SYNC_AWAIT_COMMAND:
     read t1 memMain 0
-    jump SYNC_WAIT_COMMAND_DEP equal t1 syncCommand
-jump SYNC_GOT_COMMAND always 0 0
-
-SYNC_SET_DEP:
-write syncCommand memSync syncIndex
-SYNC_WAIT_COMMAND: # command-only cycle
-    read t1 memMain 0
-    jump SYNC_WAIT_COMMAND equal t1 syncCommand
-SYNC_GOT_COMMAND:
+    jump SYNC_AWAIT_COMMAND equal t1 syncCommand
 set syncCommand t1
-op abs t1 t1 0
-jump RESET equal t1 2
-jump SYNC_WAIT_COMMAND notEqual t1 1 # (jump RENDER_FRAME equal t1 1 ; jump SYNC_WAIT_COMMAND always 0 0)
+op abs t1 syncCommand 0
+jump COMM_RESET equal t1 1
+jump COMM_RENDER_FRAME equal t1 2
+jump SYNC_COMMAND_DONE always 0 0
 
-RENDER_FRAME:
+COMM_RESET:
+    # calculating render area
+    op mul t1 176 176
+    op div pcH t1 procCount
+    op max pcH pcH 1 # pixels per GPU
+    # if render area is outside the screen, we need to decrease pcH
+    # if area is fully outside, pcH will be negative, and no pixels will be rendered
+    op mul t2 pcH procIndex
+    op add t2 t2 pcH
+    op sub t2 t2 t1
+    op max t2 t2 0
+    op sub pcH pcH t2
+    # start pixel coords
+    op mul t1 pcH procIndex
+    op mod pxL t1 176
+    op div pyL t1 176
+    op floor pyL pyL 0
+
+    set dispMain display1
+    set frameAlpha 255 # first frame will be opaque
+    jump SYNC_COMMAND_DONE always 0 0
+
+COMM_RENDER_FRAME:
+    # getting scene parameters
+    read matArr memMain 2
+    read matCount memMain matArr
+    set matSize 7
+    read sphereArr memMain 3
+    read sphereCount memMain sphereArr
+    set sphereSize 5
+    read yplaneArr memMain 4
+    read yplaneCount memMain yplaneArr
+    set yplaneSize 4
+
+    read bgEmitR memMain 5
+    read bgEmitG memMain 6
+    read bgEmitB memMain 7
+    read bgStarsR memMain 8
+    read bgStarsG memMain 9
+    read bgStarsB memMain 10
+    read bgStarsThreshold memMain 11
+    read bgStarsSize memMain 12
+    read bounceCount memMain 13
+    read rayOriginShift memMain 14
+
+    # render starts
     set pc pcH
     set px pxL
     set py pyL
     NEXT_PIXEL:
-        read t1 memMain 0 # checking for reset every pixel
-        op abs t2 t1 0
-        jump NO_RESET notEqual t2 2
-            set syncCommand t1
-            jump RESET always 0 0
-        NO_RESET:
-
         set rayOrigX 0.0
         set rayOrigY 0.0
         set rayOrigZ 0.0
@@ -125,6 +106,13 @@ RENDER_FRAME:
 
         set bounceInd 0
         NEXT_BOUNCE:
+            # render is a long operation, so we should handle some kind of stop command here
+            # but we don't have a stop command, we have a reset
+            # putting it here slows render, but it's the only way to stop in case of large number of bounces
+            read t1 memMain 0
+            op abs t1 t1 0
+            jump SYNC_AWAIT_COMMAND equal t1 1
+
             set bestDist 9999
             set bestNormX 0
             set bestNormY 0
@@ -439,6 +427,6 @@ RENDER_FRAME:
         set px 0
         op add py py 1
 	    jump NEXT_PIXEL always 0 0
-RENDER_END:
-set frameAlpha 127 # other frames are mixed with previous
-jump SYNC_AWAIT always 0 0
+    RENDER_END:
+    set frameAlpha 127 # other frames are mixed with previous
+    jump SYNC_COMMAND_DONE always 0 0

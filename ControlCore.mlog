@@ -1,45 +1,46 @@
-set syncCommand -2 # will become 2 because command sign inverts
+set procCount 514
+
+AWAIT_DEVICES:
+    set memMain bank1
+    jump AWAIT_DEVICES strictEqual memMain null
+    set swReset switch1
+    jump AWAIT_DEVICES strictEqual swReset null
+
+sensor t1 swReset @enabled
+AWAIT_INITIAL_RESET:
+    sensor resetState swReset @enabled
+    jump AWAIT_INITIAL_RESET equal resetState t1
+
+set syncCommandAbs 0
+set syncCommandSign 1
+
 RESET:
-set swReset switch1
-set memMain bank1
-set memSync0 bank2
-set memSync1 bank3
-set msgDebug message1
-set dispMain display1
-
-# syncCommand := -2 * sign(syncCommand) = -2 * syncCommand / abs(syncCommand)
-op abs t1 syncCommand 0
-op div t1 syncCommand t1
-op mul syncCommand t1 -2
-
 # General variables
-write syncCommand memMain 0 # for synchronization, not a parameter (+-1 - render frame, +-2 - reset)
-# matArr    1
-# sphereArr 2
-# yplaneArr 3
-write 0.0 memMain 4 # bg color
-write 0.4 memMain 5
-write 0.8 memMain 6
-write 0.4 memMain 7 # stars color
-write 1.0 memMain 8
+# matArr    2
+# sphereArr 3
+# yplaneArr 4
+write 0.0 memMain 5 # bg color
+write 0.4 memMain 6
+write 0.8 memMain 7
+write 0.4 memMain 8 # stars color
 write 1.0 memMain 9
-write 0.05 memMain 10 # stars threshold (if noise value is below - it's a star)
-write 2 memMain 11 # stars size (degrees on sky sphere)
-write 3 memMain 12 # bounce count
-write 0.1 memMain 13 # along-normal shift (added to new ray origin to prevent collision in actual origin)
-set gVarSize 14
-
+write 1.0 memMain 10
+write 0.05 memMain 11 # stars threshold (if noise value is below - it's a star)
+write 2 memMain 12 # stars size (degrees on sky sphere)
+write 3 memMain 13 # bounce count
+write 0.1 memMain 14 # along-normal shift (added to new ray origin to prevent collision in actual origin)
+set gVarSize 15
 
 # Materials
 op add matArr 0 gVarSize
 # Format emit_r emit_g emit_b color_r color_g color_b roughness (7 nums)
 set matSize 7
-set matCount 4
-write matArr memMain 1 # materials array pointer
+set matCount 5
+write matArr memMain 2 # materials array pointer
 write matCount memMain matArr # array starts with length
 set matPtr matArr
 
-# (0) dark rough metal
+# (0) dark slightly rough metal
 op add matPtr matPtr 1 # emit
 write 0 memMain matPtr
 op add matPtr matPtr 1
@@ -71,7 +72,7 @@ write 0 memMain matPtr
 op add matPtr matPtr 1 # rough
 write 0 memMain matPtr
 
-# (2) dark metal
+# (2) dark smooth metal
 op add matPtr matPtr 1 # emit
 write 0 memMain matPtr
 op add matPtr matPtr 1
@@ -103,6 +104,22 @@ write 0.5 memMain matPtr
 op add matPtr matPtr 1 # rough
 write 0 memMain matPtr
 
+# (4) yellow emission
+op add matPtr matPtr 1 # emit
+write 1 memMain matPtr
+op add matPtr matPtr 1
+write 1 memMain matPtr
+op add matPtr matPtr 1
+write 0 memMain matPtr
+op add matPtr matPtr 1 # refl
+write 0 memMain matPtr
+op add matPtr matPtr 1
+write 0 memMain matPtr
+op add matPtr matPtr 1
+write 0 memMain matPtr
+op add matPtr matPtr 1 # rough
+write 0 memMain matPtr
+
 
 # Spheres
 op mul sphereArr matCount matSize
@@ -110,22 +127,24 @@ op add sphereArr sphereArr 1
 op add sphereArr sphereArr matArr
 # Format: x y z r mat (5 nums)
 set sphereSize 5
-set sphereCount 2
-write sphereArr memMain 2 # spheres array pointer
+set sphereCount 3
+write sphereArr memMain 3 # spheres array pointer
 write sphereCount memMain sphereArr
 set spherePtr sphereArr
 
+# (0) big metallic sphere
 op add spherePtr spherePtr 1 # pos
-write 0 memMain spherePtr
+write -10 memMain spherePtr
 op add spherePtr spherePtr 1
-write 7 memMain spherePtr
+write 20 memMain spherePtr
 op add spherePtr spherePtr 1
-write 10 memMain spherePtr
+write 40 memMain spherePtr
 op add spherePtr spherePtr 1 # rad
-write 5.0 memMain spherePtr
+write 20.0 memMain spherePtr
 op add spherePtr spherePtr 1 # mat
 write 2 memMain spherePtr
 
+# (1) small red sphere
 op add spherePtr spherePtr 1 # pos
 write 10 memMain spherePtr
 op add spherePtr spherePtr 1
@@ -137,6 +156,18 @@ write 5 memMain spherePtr
 op add spherePtr spherePtr 1 # mat
 write 3 memMain spherePtr
 
+# (2) small yellow sphere
+op add spherePtr spherePtr 1 # pos
+write -10 memMain spherePtr
+op add spherePtr spherePtr 1
+write -4 memMain spherePtr
+op add spherePtr spherePtr 1
+write 30 memMain spherePtr
+op add spherePtr spherePtr 1 # rad
+write 5 memMain spherePtr
+op add spherePtr spherePtr 1 # mat
+write 4 memMain spherePtr
+
 
 # Y-planes
 # Format: y mw mat0 mat1 (4 nums)
@@ -146,13 +177,14 @@ op add yplaneArr yplaneArr 1
 op add yplaneArr yplaneArr sphereArr
 set yplaneSize 4
 set yplaneCount 1
-write yplaneArr memMain 3 # y-planes array pointer
+write yplaneArr memMain 4 # y-planes array pointer
 write yplaneCount memMain yplaneArr
 set yplanePtr yplaneArr
 
+# (0) floor
 op add yplanePtr yplanePtr 1 # y
 write -10 memMain yplanePtr
-op add yplanePtr yplanePtr 1 # mw
+op add yplanePtr yplanePtr 1 # square width
 write 20 memMain yplanePtr
 op add yplanePtr yplanePtr 1 # mats
 write 1 memMain yplanePtr
@@ -160,33 +192,32 @@ op add yplanePtr yplanePtr 1
 write 0 memMain yplanePtr
 
 
-# machine-dependent (514 GPUs, 2 sync memory blocks, each connected to 257 GPUs)
-set procCount 514
-op div lastSyncIndex procCount 2
-op sub lastSyncIndex lastSyncIndex 1
 
-# There are two scenarios:
-# 1) GPUs wait for next command, and we jumped to RESET. It will send the command and here we just wait for GPUs to reset.
-# 2) We just rejoined the world and all processors were reset. GPUs executed command +2, Control Core sends +2,
-# GPUs don't react (it's same command), waiting cycle below stops at first iteration.
-WAIT_FOR_RESET:
-    read t1 memSync0 lastSyncIndex
-    jump WAIT_FOR_RESET notEqual t1 syncCommand
-    read t1 memSync1 lastSyncIndex
-    jump WAIT_FOR_RESET notEqual t1 syncCommand
-draw clear 0 0 0 0 0 0
-drawflush dispMain
+# application-like logic here, can be changed
+NEXT_COMMAND:
+    jump COMM_RESET equal syncCommandAbs 0
+    jump COMM_RENDER_FRAME equal syncCommandAbs 1
+    jump COMM_RENDER_FRAME equal syncCommandAbs 2
+    jump NEXT_COMMAND always 0 0 # panic
+COMM_RESET:
+    sensor resetState swReset @enabled
+    set dispMain display1
+    draw clear 0 0 0 0 0 0
+    drawflush dispMain
+    set syncCommandAbs 1
+    jump SEND_COMMAND always 0 0
+COMM_RENDER_FRAME:
+    set syncCommandAbs 2
+    #jump SEND_COMMAND always 0 0
 
-sensor swResetState swReset @enabled
-set syncCommand 1
-RENDER_FRAME:
-    op sub syncCommand 0 syncCommand
-    write syncCommand memMain 0
-    WAIT_FOR_FRAME: # I NEED CALL/RET (╯°□°）╯︵ ┻━┻
-        sensor t1 swReset @enabled
-        jump RESET notEqual t1 swResetState
-        read t1 memSync0 lastSyncIndex
-        jump WAIT_FOR_FRAME notEqual t1 syncCommand
-        read t1 memSync1 lastSyncIndex
-        jump WAIT_FOR_FRAME notEqual t1 syncCommand
-    jump RENDER_FRAME always 0 0
+SEND_COMMAND:
+    op sub syncCommandSign 0 syncCommandSign
+    op mul t1 syncCommandAbs syncCommandSign
+    write 0 memMain 1
+    write t1 memMain 0
+WAIT_GPUS_FINISH_COMMAND:
+    sensor t1 swReset @enabled
+    jump COMM_RESET notEqual t1 resetState
+    read t1 memMain 1
+    jump WAIT_GPUS_FINISH_COMMAND notEqual t1 procCount
+jump NEXT_COMMAND always 0 0
