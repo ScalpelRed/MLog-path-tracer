@@ -199,14 +199,12 @@ op div syncCommandSign t1 t2
 
 # application-like logic here, can be changed
 NEXT_COMMAND:
+    sensor t1 swReset @enabled
+    jump COMM_RESET notEqual t1 resetState
     jump COMM_RESET equal syncCommandAbs 0
     jump COMM_RENDER_FRAME equal syncCommandAbs 1
     jump COMM_RENDER_FRAME equal syncCommandAbs 2
-    jump NEXT_COMMAND always 0 0 # panic
-STOP_RENDER:
-    set syncCommandAbs 0
-    write 0 memMain 0
-    jump WAIT_FINISH_COMMAND always 0 0
+    jump NEXT_COMMAND always 0 0
 COMM_RESET:
     sensor resetState swReset @enabled
     set dispMain display1
@@ -224,10 +222,6 @@ SEND_COMMAND:
     write 0 memMain 1
     write t1 memMain 0
 WAIT_FINISH_COMMAND:
-    jump IGNORE_RESET notEqual syncCommandAbs 2
-        sensor t1 swReset @enabled
-        jump STOP_RENDER notEqual t1 resetState
-    IGNORE_RESET:
     read t1 memMain 1
     jump WAIT_FINISH_COMMAND notEqual t1 procCount
 jump NEXT_COMMAND always 0 0

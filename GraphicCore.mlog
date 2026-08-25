@@ -28,7 +28,6 @@ SYNC_AWAIT_COMMAND:
     jump SYNC_AWAIT_COMMAND equal t1 syncCommand
 set syncCommand t1
 op abs t1 syncCommand 0
-jump SYNC_AWAIT_COMMAND equal t1 0
 jump COMM_RESET equal t1 1
 jump COMM_RENDER_FRAME equal t1 2
 jump SYNC_COMMAND_DONE always 0 0
@@ -107,10 +106,7 @@ COMM_RENDER_FRAME:
 
         set bounceInd 0
         NEXT_BOUNCE:
-            # render is a long operation, so we should handle stop command here
-            # putting it here slows render, but it's the only way to stop in case of large number of bounces
-            read syncCommand memMain 0
-            jump SYNC_COMMAND_DONE equal syncCommand 0
+            # TODO mid-render reset or stopping rendering
 
             set bestDist 9999
             set bestNormX 0
