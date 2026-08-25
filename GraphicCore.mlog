@@ -1,5 +1,5 @@
 set procIndex 0
-set procCount 514
+set procCount 525
 
 AWAIT_MEMORY:
     set memMain bank1
@@ -28,6 +28,7 @@ SYNC_AWAIT_COMMAND:
     jump SYNC_AWAIT_COMMAND equal t1 syncCommand
 set syncCommand t1
 op abs t1 syncCommand 0
+jump SYNC_AWAIT_COMMAND equal t1 0
 jump COMM_RESET equal t1 1
 jump COMM_RENDER_FRAME equal t1 2
 jump SYNC_COMMAND_DONE always 0 0
@@ -106,12 +107,10 @@ COMM_RENDER_FRAME:
 
         set bounceInd 0
         NEXT_BOUNCE:
-            # render is a long operation, so we should handle some kind of stop command here
-            # but we don't have a stop command, we have a reset
+            # render is a long operation, so we should handle stop command here
             # putting it here slows render, but it's the only way to stop in case of large number of bounces
-            read t1 memMain 0
-            op abs t1 t1 0
-            jump SYNC_AWAIT_COMMAND equal t1 1
+            read syncCommand memMain 0
+            jump SYNC_COMMAND_DONE equal syncCommand 0
 
             set bestDist 9999
             set bestNormX 0

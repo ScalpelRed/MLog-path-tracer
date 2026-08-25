@@ -1,4 +1,4 @@
-set procCount 514
+set procCount 525
 
 AWAIT_DEVICES:
     set memMain bank1
@@ -10,9 +10,6 @@ sensor t1 swReset @enabled
 AWAIT_INITIAL_RESET:
     sensor resetState swReset @enabled
     jump AWAIT_INITIAL_RESET equal resetState t1
-
-set syncCommandAbs 0
-set syncCommandSign 1
 
 RESET:
 # General variables
@@ -86,7 +83,7 @@ write 0.5 memMain matPtr
 op add matPtr matPtr 1
 write 0.5 memMain matPtr
 op add matPtr matPtr 1 # rough
-write 0 memMain matPtr
+write 0.0 memMain matPtr
 
 # (3) red glowing metal
 op add matPtr matPtr 1 # emit
@@ -184,7 +181,7 @@ set yplanePtr yplaneArr
 # (0) floor
 op add yplanePtr yplanePtr 1 # y
 write -10 memMain yplanePtr
-op add yplanePtr yplanePtr 1 # square width
+op add yplanePtr yplanePtr 1 # cell width
 write 20 memMain yplanePtr
 op add yplanePtr yplanePtr 1 # mats
 write 1 memMain yplanePtr
@@ -193,12 +190,23 @@ write 0 memMain yplanePtr
 
 
 
+set syncCommandAbs 0
+read t1 memMain 0 # setting initial command sign to be opposite to what written in memory
+op mul t1 t1 2
+op add t1 t1 1
+op abs t2 t1 0
+op div syncCommandSign t1 t2
+
 # application-like logic here, can be changed
 NEXT_COMMAND:
     jump COMM_RESET equal syncCommandAbs 0
     jump COMM_RENDER_FRAME equal syncCommandAbs 1
     jump COMM_RENDER_FRAME equal syncCommandAbs 2
     jump NEXT_COMMAND always 0 0 # panic
+STOP_RENDER:
+    set syncCommandAbs 0
+    write 0 memMain 0
+    jump WAIT_FINISH_COMMAND always 0 0
 COMM_RESET:
     sensor resetState swReset @enabled
     set dispMain display1
@@ -215,9 +223,11 @@ SEND_COMMAND:
     op mul t1 syncCommandAbs syncCommandSign
     write 0 memMain 1
     write t1 memMain 0
-WAIT_GPUS_FINISH_COMMAND:
-    sensor t1 swReset @enabled
-    jump COMM_RESET notEqual t1 resetState
+WAIT_FINISH_COMMAND:
+    jump IGNORE_RESET notEqual syncCommandAbs 2
+        sensor t1 swReset @enabled
+        jump STOP_RENDER notEqual t1 resetState
+    IGNORE_RESET:
     read t1 memMain 1
-    jump WAIT_GPUS_FINISH_COMMAND notEqual t1 procCount
+    jump WAIT_FINISH_COMMAND notEqual t1 procCount
 jump NEXT_COMMAND always 0 0
